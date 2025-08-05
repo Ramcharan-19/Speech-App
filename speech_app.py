@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 # Set page configuration
 st.set_page_config(
-    page_title="Speech to Text App",
+    page_title="Speech App",
     page_icon="🎤",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -30,6 +30,20 @@ st.markdown("""
     .stApp {
         background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
+
+    .tts-container {
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 2px dashed #dcdcdc;
+    }
+
+    .tts-header {
+        text-align: center;
+        color: #4a4a4a;
+        font-size: 2.5rem;
+        font-weight: 300;
+        margin-bottom: 1rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -37,7 +51,7 @@ st.markdown("""
 st.markdown('<h1 class="main-header">🎤 Speech to Text App</h1>', unsafe_allow_html=True)
 st.markdown('<p class="description">Click "Start" to begin converting your speech to text in real-time</p>', unsafe_allow_html=True)
 
-# Create columns for better layout
+# Create columns for better layout for STT
 col1, col2, col3 = st.columns([1, 2, 1])
 
 with col2:
@@ -261,26 +275,65 @@ with col2:
     # Display the HTML component
     components.html(html_code, height=400, scrolling=False)
 
+# --------------------------------------------------
+# New Text to Speech Section
+# --------------------------------------------------
+st.markdown('<div class="tts-container"></div>', unsafe_allow_html=True)
+st.markdown('<h2 class="tts-header">🔊 Text to AI Speech</h2>', unsafe_allow_html=True)
+st.markdown('<p class="description">Enter text below and click "Speak" to hear it read aloud.</p>', unsafe_allow_html=True)
+
+tts_text = st.text_area("Enter text here:", height=150, key="tts_input")
+
+if st.button("Speak"):
+    if tts_text:
+        # Use an HTML component to handle the TTS functionality in the browser
+        # Note: The Web Speech API is used here as a standard way to achieve this.
+        # It leverages the user's browser for speech synthesis, which is the most
+        # common implementation for a simple Streamlit app without external APIs.
+        tts_html_code = f"""
+        <!DOCTYPE html>
+        <html>
+        <body>
+        <script>
+            if ('speechSynthesis' in window) {{
+                const utterance = new SpeechSynthesisUtterance("{tts_text.replace('"', '\\"')}");
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }} else {{
+                alert('Text-to-speech not supported in this browser.');
+            }}
+        </script>
+        </body>
+        </html>
+        """
+        components.html(tts_html_code, height=0)
+    else:
+        st.warning("Please enter some text to speak.")
+
+
 # Add some information in the sidebar
 with st.sidebar:
     st.markdown("### ℹ️ Information")
     st.markdown("""
-    **How to use:**
+    **How to use (Speech to Text):**
     1. Click the "Start" button
     2. Allow microphone access when prompted
     3. Speak clearly into your microphone
     4. Click "Stop" when finished
     
+    **How to use (Text to AI Speech):**
+    1. Enter text into the text box
+    2. Click the "Speak" button
+    3. Ensure your volume is up to hear the output
+
     **Requirements:**
     - Modern browser (Chrome, Edge, Safari)
-    - Microphone access permission
+    - Microphone access permission (for STT)
     - Internet connection
     
     **Features:**
     - Real-time speech recognition
-    - Proper word spacing and grammar
-    - Visual feedback when listening
-    - Error handling and status updates
+    - Text-to-speech playback
     """)
     
     st.markdown("### 🔧 Technical Details")
